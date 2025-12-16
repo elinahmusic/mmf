@@ -1,0 +1,1701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+    <title>Admin </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com"> <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> <link href="https://fonts.googleapis.com/css2?family=Sofia+Sans+Condensed:ital,wght@0,1..1000;1,1..1000&display=swap" rel="stylesheet">
+    <script src="refresh_force.js"></script>
+    <script src="no_select.js"></script>
+    <style>  
+        *{   font-family: "Sofia Sans Condensed", sans-serif;
+    </style>  
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #0a0a0a;
+            min-height: 100vh;
+            color: white;
+        }
+        
+        .logo {
+            height: 3em;
+            width: auto;
+        }
+        
+        #header {
+            width: 97%;
+            background: black;
+            position: fixed;
+            top: 2px;
+            padding: 10px;
+            left: 2px;
+            border-radius: 5px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            z-index: 1000;
+            border: 1px solid #333;
+            overflow-x: auto;
+        }
+        
+        .back-btn {
+            color: white;
+            text-decoration: none;
+            font-size: 1.2em;
+            padding: 5px 15px;
+            border: 1px solid #6ab8ff;
+            border-radius: 5px;
+            background: rgba(106, 184, 255, 0.1);
+        }
+        
+        main {
+            margin-top: 6em;
+            padding: 20px;
+        }
+        
+        .admin-container {
+            background: #111;
+            border-radius: 10px;
+            padding: 30px;
+            margin: 0 auto;
+            max-width: 1200px;
+            border: 1px solid #333;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #6ab8ff;
+            text-shadow: 0 0 10px rgba(106, 184, 255, 0.3);
+        }
+        
+        .login-section {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 30px;
+            background: #111;
+            border-radius: 10px;
+            border: 1px solid #333;
+        }
+        
+        .login-section h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #6ab8ff;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #ccc;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid #333;
+            background: #222;
+            color: white;
+            font-size: 16px;
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: #6ab8ff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .login-btn:hover {
+            background: #4a9eff;
+        }
+        
+        .logout-btn {
+            background: #dc3545;
+        }
+        
+        .logout-btn:hover {
+            background: #c82333;
+        }
+        
+        .message {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: center;
+            display: none;
+        }
+        
+        .error {
+            background: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+            display: block;
+        }
+        
+        .success {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+            border: 1px solid rgba(40, 167, 69, 0.3);
+            display: block;
+        }
+        
+        .admin-panel {
+            display: none;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: #222;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #333;
+        }
+        
+        .stat-card h3 {
+            color: #ccc;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .stat-card .value {
+            color: #6ab8ff;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        
+        .admin-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #333;
+            flex-wrap: wrap;
+        }
+        
+        .tab-btn {
+            padding: 15px 30px;
+            background: none;
+            border: none;
+            color: #ccc;
+            font-size: 16px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab-btn:hover {
+            color: #6ab8ff;
+        }
+        
+        .tab-btn.active {
+            color: #6ab8ff;
+            border-bottom-color: #6ab8ff;
+            background: rgba(106, 184, 255, 0.1);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            background: #222;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #333;
+            min-height: 400px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: white;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+        
+        th {
+            background: #333;
+            color: #6ab8ff;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+        
+        tr:hover {
+            background: rgba(106, 184, 255, 0.05);
+        }
+        
+        .action-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 2px;
+            font-size: 12px;
+            transition: opacity 0.3s;
+        }
+        
+        .action-btn:hover {
+            opacity: 0.8;
+        }
+        
+        .edit-btn {
+            background: #6ab8ff;
+            color: white;
+        }
+        
+        .activate-btn {
+            background: #28a745;
+            color: white;
+        }
+        
+        .suspend-btn {
+            background: #ffc107;
+            color: black;
+        }
+        
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: #111;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid #333;
+            position: relative;
+        }
+        
+        .modal h3 {
+            color: #6ab8ff;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .modal-input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #333;
+            background: #222;
+            color: white;
+            font-size: 16px;
+        }
+        
+        .modal-btn {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: none;
+            background: #6ab8ff;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .modal-btn:hover {
+            background: #4a9eff;
+        }
+        
+        .modal-btn.secondary {
+            background: #333;
+        }
+        
+        .modal-btn.secondary:hover {
+            background: #444;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #ccc;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .close-btn:hover {
+            color: white;
+        }
+        
+        .search-box {
+            margin-bottom: 20px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid #333;
+            background: #222;
+            color: white;
+            font-size: 16px;
+        }
+        
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        
+        .status-active {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+            border: 1px solid rgba(40, 167, 69, 0.3);
+        }
+        
+        .status-inactive {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+        
+        .status-pending {
+            background: rgba(0, 123, 255, 0.2);
+            color: #007bff;
+            border: 1px solid rgba(0, 123, 255, 0.3);
+
+        }
+        
+        .status-suspended {
+            background: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+        }
+        
+        .loader {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(106, 184, 255, 0.3);
+            border-top: 4px solid #6ab8ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #444;
+        }
+        
+        .refresh-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 14px;
+        }
+        
+        .refresh-btn:hover {
+            background: #218838;
+        }
+        
+        @media (max-width: 768px) {
+            .admin-container {
+                padding: 20px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .admin-tabs {
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+            
+            .tab-btn {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+            
+            th, td {
+                padding: 8px 10px;
+                font-size: 14px;
+            }
+            
+            .action-btn {
+                margin: 1px;
+                padding: 4px 8px;
+                font-size: 11px;
+            }
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .data-count {
+            color: #6ab8ff;
+            font-weight: bold;
+        }
+        #total-balance{
+            color: #6ab8ff;
+            font-size: 28px;
+            font-weight: bold;
+            overflow-x: auto;
+            width: 60%;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div id="header">
+        <img src="logo.png" class="logo"><div class="value" id="total-balance">$0.00</div>
+<div class="dropdown">
+  <button class="dropdown-toggle">
+      <i class="fas fa-ellipsis-v"></i>
+  </button>
+  <div class="dropdown-menu">
+    <a><i class="fas fa-globe"></i> Users <sup id="total-users"></sup></a>
+    <a><i class="fas fa-star"></i> Active Users <sup id="active-users"></sup></a>
+    <a><i class="fas fa-hand-holding-usd"></i> Withdrawals <sup id="pending-wothdrawals"></sup></a>
+    <a onclick="loadAllData()"><i class="fas fa-undo-alt fa-rotate-45"></i> Refresh</a>
+  <a onclick="logoutAdmin()"><i class="fas fa-sign-out"></i> Logout</a>
+  </div>
+</div>
+
+<style>
+.dropdown {
+  position: fixed;
+  right: 0;
+  display: inline-block;
+}
+
+.dropdown-toggle {
+  background: none;
+  color: white;
+  padding: 10px 2p;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 2em;
+}
+
+.dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: 120%;
+  background: black;
+  min-width: 200px;
+  border-radius: 5px;
+  display: none;
+  z-index: 1000;
+  margin-top: 5px;
+  border: 1px solid #404040;
+}
+
+.dropdown-menu a {
+  display: block;
+  padding: 10px 15px;
+  text-decoration: none;
+  color: white;
+  transition: all 0.5s;
+  border-bottom: 1px solid #404040;
+}
+
+.dropdown-menu a sup{
+background: green;
+padding: 0 5px;
+border-radius: 50%;
+ }
+.dropdown-menu a i{
+    padding-right: 30px;
+}
+.show {
+  display: block;
+}
+</style>
+
+<script>
+const dropdown = document.querySelector('.dropdown');
+const toggle = document.querySelector('.dropdown-toggle');
+const menu = document.querySelector('.dropdown-menu');
+
+toggle.addEventListener('click', function(e) {
+  e.stopPropagation();
+  menu.classList.toggle('show');
+});
+
+// Close dropdown only when clicking outside
+document.addEventListener('click', function(e) {
+  if (!dropdown.contains(e.target)) {
+    menu.classList.remove('show');
+  }
+});
+</script>
+</div>    
+    <!-- Main Content -->
+    <main>
+        <div class="admin-container">
+           <!-- Login Section -->
+            <div id="login-section" class="login-section">
+                <h2>Confirm Access</h2>
+                <div id="login-message" class="message"></div>
+                <div class="input-group">
+                    <label>Access code</label>
+                    <input type="password" id="admin-password" placeholder="mcm_101...." autocomplete="current-password">
+                </div>
+                <button class="login-btn" onclick="adminLogin()">
+Go
+                </button>
+            </div>
+            
+            <!-- Admin Panel -->
+            <div id="admin-panel" class="admin-panel">
+                <!-- Tabs -->
+                <div class="admin-tabs">
+                    <button class="tab-btn active" onclick="showTab('users')">
+                        <i class="fas fa-users"></i> Users
+                    </button>
+                    <button class="tab-btn" onclick="showTab('transactions')">
+                        <i class="fas fa-exchange-alt"></i> Transactions
+                    </button>
+                    <button class="tab-btn" onclick="showTab('withdrawals')">
+                        <i class="fas fa-money-bill-wave"></i> Withdrawals
+                    </button>
+                    <button class="tab-btn" onclick="showTab('investments')">
+                        <i class="fas fa-chart-line"></i> Investments
+                    </button>
+                    <button class="tab-btn" onclick="showTab('settings')">
+                        <i class="fas fa-cog"></i> Settings
+                    </button>
+                </div>
+                
+                <!-- Search Box -->
+                <div class="search-box">
+                    <input type="text" id="search-input" class="search-input" placeholder="🔍 Search users, emails, or IDs..." onkeyup="searchTable()">
+                </div>
+                
+                <!-- Users Tab -->
+                <div id="users-tab" class="tab-content active">
+                    <div class="table-container">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h3 style="color: #6ab8ff; margin: 0;">User Management</h3>
+                            <span id="users-count" style="color: #ccc;">Loading...</span>
+                        </div>
+                        <table id="users-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Balance</th>
+                                    <th>Status</th>
+                                    <th>Joined</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-tbody">
+                                <tr>
+                                    <td colspan="6" style="text-align: center;">
+                                        <div class="loader"></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Transactions Tab -->
+                <div id="transactions-tab" class="tab-content">
+                    <div class="table-container">
+                        <h3 style="color: #6ab8ff; margin-bottom: 15px;">All Transactions</h3>
+                        <table id="transactions-table">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Description</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactions-tbody">
+                                <tr>
+                                    <td colspan="6" style="text-align: center;">
+                                        <div class="loader"></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Withdrawals Tab -->
+                <div id="withdrawals-tab" class="tab-content">
+                    <div class="table-container">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h3 style="color: #6ab8ff; margin: 0;">Withdrawal Requests</h3>
+                            <span id="withdrawals-count" style="color: #ccc;">Loading...</span>
+                        </div>
+                        <div id="withdrawals-container">
+                            <table id="withdrawals-table">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Amount</th>
+                                        <th>Method</th>
+                                        <th>Wallet</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="withdrawals-tbody">
+                                    <tr>
+                                        <td colspan="7" style="text-align: center;">
+                                            <div class="loader"></div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Investments Tab -->
+                <div id="investments-tab" class="tab-content">
+                    <div class="table-container">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h3 style="color: #6ab8ff; margin: 0;">Investment Requests</h3>
+                            <span id="investments-count" style="color: #ccc;">Loading...</span>
+                        </div>
+                        <div id="investments-container">
+                            <table id="investments-table">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Plan</th>
+                                        <th>Amount</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="investments-tbody">
+                                    <tr>
+                                        <td colspan="6" style="text-align: center;">
+                                            <div class="loader"></div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Settings Tab -->
+                <div id="settings-tab" class="tab-content">
+                    <div class="table-container">
+                        <h3 style="color: #6ab8ff; margin-bottom: 20px;">System Settings</h3>
+                        <div style="margin-bottom: 20px;">
+                            <div class="input-group">
+                                <label>Activation Fee ($)</label>
+                                <input type="number" id="activation-fee" class="modal-input" value="50" min="0">
+                            </div>
+                            <div class="input-group">
+                                <label>Withdrawal Fee (%)</label>
+                                <input type="number" id="withdrawal-fee" class="modal-input" value="5" min="0" max="100" step="0.1">
+                            </div>
+                            <div class="input-group">
+                                <label>Minimum Withdrawal ($)</label>
+                                <input type="number" id="min-withdrawal" class="modal-input" value="10" min="0">
+                            </div>
+                            <div class="input-group">
+                                <label>Referral Bonus ($)</label>
+                                <input type="number" id="referral-bonus" class="modal-input" value="10" min="0">
+                            </div>
+                            <button class="modal-btn" onclick="saveSettings()">
+                                <i class="fas fa-save"></i> Save Settings
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Edit User Modal -->
+    <div id="edit-user-modal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('edit-user-modal')">&times;</button>
+            <h3><i class="fas fa-user-edit"></i> Edit User</h3>
+            <input type="hidden" id="edit-user-id">
+            
+            <div class="input-group">
+                <label>Account Balance ($)</label>
+                <input type="number" id="edit-balance" class="modal-input" step="0.01" min="0">
+            </div>
+            
+            <div class="input-group">
+                <label>Account Status</label>
+                <select id="edit-status" class="modal-input">
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="suspended">Suspended</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label>Activation Status</label>
+                <select id="edit-activation" class="modal-input">
+                    <option value="true">Activated</option>
+                    <option value="false">Not Activated</option>
+                </select>
+            </div>
+            
+            <button class="modal-btn" onclick="saveUserChanges()">
+                <i class="fas fa-save"></i> Save Changes
+            </button>
+            <button class="modal-btn secondary" onclick="closeModal('edit-user-modal')">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+        </div>
+    </div>
+
+    <!-- Firebase Configuration and Main Script -->
+    <script>
+        // ==============================================
+        // FIREBASE CONFIGURATION
+        // ==============================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAJaFVETxpy8Vr5e6RXDWi3NBhEUaZEPN4",
+            authDomain: "malcolm-finance.firebaseapp.com",
+            projectId: "malcolm-finance",
+            storageBucket: "malcolm-finance.firebasestorage.app",
+            messagingSenderId: "987613399580",
+            appId: "1:987613399580:web:0237b2c8c2c7df54222dd9",
+            measurementId: "G-1CEG3BWFBP"
+        };
+
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        
+        // ==============================================
+        // GLOBAL VARIABLES
+        // ==============================================
+        let isAdminLoggedIn = false;
+        let allUsers = [];
+        let allTransactions = [];
+        let allWithdrawals = [];
+        let allInvestments = [];
+        let currentEditingUserId = null;
+        
+        // Admin Password (Change this for security)
+        const ADMIN_PASSWORD = "22cabbage";
+        
+        // ==============================================
+        // INITIALIZATION
+        // ==============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("Admin panel initialized");
+            
+            // Check if already logged in
+            if (localStorage.getItem('adminLoggedIn') === 'true') {
+                showAdminPanel();
+                loadAllData();
+            } else {
+                document.getElementById('login-section').style.display = 'block';
+                document.getElementById('admin-panel').style.display = 'none';
+            }
+        });
+        
+        // ==============================================
+        // ADMIN AUTHENTICATION
+        // ==============================================
+        function adminLogin() {
+            const password = document.getElementById('admin-password').value;
+            const messageDiv = document.getElementById('login-message');
+            
+            if (password === ADMIN_PASSWORD) {
+                isAdminLoggedIn = true;
+                localStorage.setItem('adminLoggedIn', 'true');
+                showSuccessMessage(messageDiv, 'Login successful!');
+                showAdminPanel();
+                loadAllData();
+            } else {
+                showErrorMessage(messageDiv, 'Access Denied!');
+            }
+        }
+        
+        function logoutAdmin() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('adminLoggedIn');
+                location.reload();
+            }
+        }
+        
+        function showAdminPanel() {
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('admin-panel').style.display = 'block';
+        }
+        
+        // ==============================================
+        // TAB MANAGEMENT
+        // ==============================================
+        function showTab(tabId) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`${tabId}-tab`).classList.add('active');
+            
+            // Load data for tab if needed
+            switch(tabId) {
+                case 'users':
+                    if (allUsers.length === 0) loadUsers();
+                    break;
+                case 'transactions':
+                    if (allTransactions.length === 0) loadTransactions();
+                    break;
+                case 'withdrawals':
+                    if (allWithdrawals.length === 0) loadWithdrawals();
+                    break;
+                case 'investments':
+                    if (allInvestments.length === 0) loadInvestments();
+                    break;
+            }
+        }
+        
+        // ==============================================
+        // LOAD ALL DATA
+        // ==============================================
+        async function loadAllData() {
+            try {
+                await Promise.all([
+                    loadDashboardStats(),
+                    loadUsers(),
+                    loadTransactions()
+                ]);
+                showSuccessMessage(null, 'All data loaded successfully!');
+            } catch (error) {
+                console.error("Error loading data:", error);
+            }
+        }
+        
+        // ==============================================
+        // DASHBOARD STATS
+        // ==============================================
+        async function loadDashboardStats() {
+            try {
+                const usersSnapshot = await db.collection('users').get();
+                allUsers = [];
+                usersSnapshot.forEach(doc => {
+                    allUsers.push({ id: doc.id, ...doc.data() });
+                });
+                
+                // Calculate stats
+                let totalUsers = usersSnapshot.size;
+                let activeUsers = allUsers.filter(user => user.isActive).length;
+                let totalBalance = allUsers.reduce((sum, user) => sum + (parseFloat(user.balance) || 0), 0);
+                
+                // Load pending withdrawals (using fallback method)
+                let pendingWithdrawals = 0;
+                try {
+                    // Try with index first
+                    const withdrawalsSnapshot = await db.collection('transactions')
+                        .where('type', '==', 'withdrawal')
+                        .where('status', '==', 'pending')
+                        .get();
+                    pendingWithdrawals = withdrawalsSnapshot.size;
+                } catch (error) {
+                    // If index error, count manually
+                    const allTxns = await db.collection('transactions').get();
+                    allTxns.forEach(doc => {
+                        const data = doc.data();
+                        if (data.type === 'withdrawal' && data.status === 'pending') {
+                            pendingWithdrawals++;
+                        }
+                    });
+                }
+                
+                // Update stats
+                document.getElementById('total-users').textContent = totalUsers;
+                document.getElementById('active-users').textContent = activeUsers;
+                document.getElementById('total-balance').textContent = '$' + totalBalance.toFixed(2);
+                document.getElementById('pending-withdrawals').textContent = pendingWithdrawals;
+                
+            } catch (error) {
+                console.error("Error loading dashboard stats:", error);
+            }
+        }
+        
+        // ==============================================
+        // LOAD USERS
+        // ==============================================
+        async function loadUsers() {
+            try {
+                const tbody = document.getElementById('users-tbody');
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;"><div class="loader"></div></td></tr>';
+                
+                const snapshot = await db.collection('users').orderBy('createdAt', 'desc').get();
+                allUsers = [];
+                snapshot.forEach(doc => {
+                    allUsers.push({ 
+                        id: doc.id, 
+                        ...doc.data(),
+                        balance: parseFloat(doc.data().balance) || 0
+                    });
+                });
+                
+                updateUsersTable();
+                
+            } catch (error) {
+                console.error("Error loading users:", error);
+                const tbody = document.getElementById('users-tbody');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #ccc;">
+                            <div class="empty-state">
+                                <i class="fas fa-users-slash"></i><br>
+                                No users found
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        
+        function updateUsersTable() {
+            const tbody = document.getElementById('users-tbody');
+            tbody.innerHTML = '';
+            
+            if (allUsers.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #ccc;">
+                            <div class="empty-state">
+                                <i class="fas fa-users-slash"></i><br>
+                                No users found
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            document.getElementById('users-count').textContent = `${allUsers.length} users`;
+            
+            allUsers.forEach(user => {
+                const row = tbody.insertRow();
+                const joinDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A';
+                
+                row.innerHTML = `
+                    <td>
+                        <strong>${user.name || 'N/A'}</strong><br>
+                        <small style="color: #666;">${user.phone || 'No phone'}</small>
+                    </td>
+                    <td>${user.email || 'N/A'}</td>
+                    <td>
+                        <strong style="color: #6ab8ff;">$${(user.balance || 0).toFixed(2)}</strong>
+                    </td>
+                    <td>
+                        <span class="status-badge ${user.isActive ? 'status-active' : 'status-inactive'}">
+                            ${user.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                    </td>
+                    <td>${joinDate}</td>
+                    <td>
+                        <button class="action-btn edit-btn" onclick="editUser('${user.id}')" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn ${user.isActive ? 'suspend-btn' : 'activate-btn'}" 
+                                onclick="${user.isActive ? 'suspendUser' : 'activateUser'}('${user.id}')" title="${user.isActive ? 'Suspend' : 'Activate'}">
+                            <i class="fas fa-${user.isActive ? 'ban' : 'check'}"></i>
+                        </button>
+                    </td>
+                `;
+            });
+        }
+        
+        // ==============================================
+        // USER MANAGEMENT FUNCTIONS
+        // ==============================================
+        function editUser(userId) {
+            const user = allUsers.find(u => u.id === userId);
+            if (!user) return;
+            
+            currentEditingUserId = userId;
+            document.getElementById('edit-user-id').value = userId;
+            document.getElementById('edit-balance').value = user.balance || 0;
+            document.getElementById('edit-status').value = user.status || 'active';
+            document.getElementById('edit-activation').value = user.isActive ? 'true' : 'false';
+            
+            showModal('edit-user-modal');
+        }
+        
+        async function saveUserChanges() {
+            const userId = currentEditingUserId;
+            const balance = parseFloat(document.getElementById('edit-balance').value);
+            const status = document.getElementById('edit-status').value;
+            const isActive = document.getElementById('edit-activation').value === 'true';
+            
+            if (!userId) return;
+            
+            try {
+                await db.collection('users').doc(userId).update({
+                    balance: balance,
+                    status: status,
+                    isActive: isActive,
+                    updatedAt: new Date().toISOString()
+                });
+                
+                alert('User updated successfully!');
+                closeModal('edit-user-modal');
+                loadUsers();
+                loadDashboardStats();
+                
+            } catch (error) {
+                console.error("Error updating user:", error);
+                alert('Error updating user: ' + error.message);
+            }
+        }
+        
+        async function activateUser(userId) {
+            if (confirm('Activate this user account?')) {
+                try {
+                    await db.collection('users').doc(userId).update({
+                        isActive: true,
+                        status: 'active',
+                        updatedAt: new Date().toISOString()
+                    });
+                    
+                    alert('User activated successfully!');
+                    loadUsers();
+                    loadDashboardStats();
+                    
+                } catch (error) {
+                    console.error("Error activating user:", error);
+                    alert('Error activating user: ' + error.message);
+                }
+            }
+        }
+        
+        async function suspendUser(userId) {
+            if (confirm('Suspend this user account?')) {
+                try {
+                    await db.collection('users').doc(userId).update({
+                        isActive: false,
+                        status: 'suspended',
+                        updatedAt: new Date().toISOString()
+                    });
+                    
+                    alert('User suspended successfully!');
+                    loadUsers();
+                    loadDashboardStats();
+                    
+                } catch (error) {
+                    console.error("Error suspending user:", error);
+                    alert('Error suspending user: ' + error.message);
+                }
+            }
+        }
+        
+        // ==============================================
+        // LOAD TRANSACTIONS (No index issues)
+        // ==============================================
+        async function loadTransactions() {
+            try {
+                const tbody = document.getElementById('transactions-tbody');
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;"><div class="loader"></div></td></tr>';
+                
+                const snapshot = await db.collection('transactions')
+                    .orderBy('date', 'desc')
+                    .limit(50)
+                    .get();
+                
+                allTransactions = [];
+                snapshot.forEach(doc => {
+                    allTransactions.push({ id: doc.id, ...doc.data() });
+                });
+                
+                updateTransactionsTable();
+                
+            } catch (error) {
+                console.error("Error loading transactions:", error);
+                const tbody = document.getElementById('transactions-tbody');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #ccc;">
+                            <div class="empty-state">
+                                <i class="fas fa-exchange-alt"></i><br>
+                                No transactions found
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        
+        function updateTransactionsTable() {
+            const tbody = document.getElementById('transactions-tbody');
+            tbody.innerHTML = '';
+            
+            if (allTransactions.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #ccc;">
+                            <div class="empty-state">
+                                <i class="fas fa-exchange-alt"></i><br>
+                                No transactions found
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            allTransactions.forEach(txn => {
+                const row = tbody.insertRow();
+                const date = txn.date ? new Date(txn.date).toLocaleString() : 'N/A';
+                const user = allUsers.find(u => u.id === txn.userId);
+                const userName = user ? user.name : 'Unknown User';
+                
+                row.innerHTML = `
+                    <td>${userName}</td>
+                    <td>${txn.type}</td>
+                    <td>
+                        <strong style="color: ${txn.amount >= 0 ? '#28a745' : '#dc3545'}">
+                            $${txn.amount}
+                        </strong>
+                    </td>
+                    <td>${txn.description || 'N/A'}</td>
+                    <td><small>${date}</small></td>
+                    <td>
+                        <span class="status-badge status-${txn.status}">
+                            ${txn.status}
+                        </span>
+                    </td>
+                `;
+            });
+        }
+        
+        // ==============================================
+        // LOAD WITHDRAWALS (NO INDEX ERRORS)
+        // ==============================================
+        async function loadWithdrawals() {
+            try {
+                const tbody = document.getElementById('withdrawals-tbody');
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;"><div class="loader"></div></td></tr>';
+                
+                // Method 1: Load all and filter (No index required)
+                const snapshot = await db.collection('transactions').get();
+                
+                allWithdrawals = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.type === 'withdrawal') {
+                        allWithdrawals.push({ id: doc.id, ...data });
+                    }
+                });
+                
+                // Sort by date manually
+                allWithdrawals.sort((a, b) => {
+                    const dateA = a.date ? new Date(a.date) : new Date(0);
+                    const dateB = b.date ? new Date(b.date) : new Date(0);
+                    return dateB - dateA; // Descending
+                });
+                
+                updateWithdrawalsTable();
+                
+            } catch (error) {
+                console.error("Error loading withdrawals:", error);
+                const tbody = document.getElementById('withdrawals-tbody');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: #ccc;">
+                            <div class="no-data">
+                                <i class="fas fa-money-bill-wave"></i><br>
+                                No withdrawal requests found
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        
+        function updateWithdrawalsTable() {
+            const tbody = document.getElementById('withdrawals-tbody');
+            tbody.innerHTML = '';
+            
+            if (allWithdrawals.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: #ccc;">
+                            <div class="no-data">
+                                <i class="fas fa-money-bill-wave"></i><br>
+                                No withdrawal requests found
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('withdrawals-count').textContent = '0 withdrawals';
+                return;
+            }
+            
+            document.getElementById('withdrawals-count').textContent = `${allWithdrawals.length} withdrawals`;
+            
+            allWithdrawals.forEach(withdrawal => {
+                const row = tbody.insertRow();
+                const date = withdrawal.date ? new Date(withdrawal.date).toLocaleString() : 'N/A';
+                const user = allUsers.find(u => u.id === withdrawal.userId);
+                const userName = user ? user.name : 'Unknown User';
+                
+                row.innerHTML = `
+                    <td>${userName}</td>
+                    <td><strong>$${withdrawal.amount}</strong></td>
+                    <td>${withdrawal.method || 'N/A'}</td>
+                    <td style="max-width: 150px; word-break: break-all;">
+                        <small>${withdrawal.wallet || 'N/A'}</small>
+                    </td>
+                    <td><small>${date}</small></td>
+                    <td>
+                        <span class="status-badge status-${withdrawal.status}">
+                            ${withdrawal.status}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="action-btn activate-btn" onclick="approveWithdrawal('${withdrawal.id}')" 
+                                ${withdrawal.status === 'completed' ? 'disabled' : ''} title="Approve">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button class="action-btn delete-btn" onclick="rejectWithdrawal('${withdrawal.id}')"
+                                ${withdrawal.status === 'rejected' ? 'disabled' : ''} title="Reject">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </td>
+                `;
+            });
+        }
+        
+        async function approveWithdrawal(transactionId) {
+            if (confirm('Approve this withdrawal request?')) {
+                try {
+                    const withdrawal = allWithdrawals.find(w => w.id === transactionId);
+                    if (!withdrawal) return;
+                    
+                    // Update transaction status
+                    await db.collection('transactions').doc(transactionId).update({
+                        status: 'completed',
+                        processedAt: new Date().toISOString(),
+                        processedBy: 'admin'
+                    });
+                    
+                    // Update user balance
+                    const user = allUsers.find(u => u.id === withdrawal.userId);
+                    if (user) {
+                        const newBalance = (user.balance || 0) - withdrawal.amount;
+                        await db.collection('users').doc(withdrawal.userId).update({
+                            balance: newBalance
+                        });
+                    }
+                    
+                    alert('Withdrawal approved and user balance updated!');
+                    loadWithdrawals();
+                    loadUsers();
+                    loadDashboardStats();
+                    
+                } catch (error) {
+                    console.error("Error approving withdrawal:", error);
+                    alert('Error approving withdrawal: ' + error.message);
+                }
+            }
+        }
+        
+        async function rejectWithdrawal(transactionId) {
+            if (confirm('Reject this withdrawal request?')) {
+                try {
+                    await db.collection('transactions').doc(transactionId).update({
+                        status: 'rejected',
+                        processedAt: new Date().toISOString(),
+                        processedBy: 'admin'
+                    });
+                    
+                    alert('Withdrawal rejected!');
+                    loadWithdrawals();
+                    
+                } catch (error) {
+                    console.error("Error rejecting withdrawal:", error);
+                    alert('Error rejecting withdrawal: ' + error.message);
+                }
+            }
+        }
+        
+        // ==============================================
+        // LOAD INVESTMENTS (NO INDEX ERRORS)
+        // ==============================================
+        async function loadInvestments() {
+            try {
+                const tbody = document.getElementById('investments-tbody');
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;"><div class="loader"></div></td></tr>';
+                
+                // Method 1: Load all and filter (No index required)
+                const snapshot = await db.collection('transactions').get();
+                
+                allInvestments = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.type === 'investment') {
+                        allInvestments.push({ id: doc.id, ...data });
+                    }
+                });
+                
+                // Sort by date manually
+                allInvestments.sort((a, b) => {
+                    const dateA = a.date ? new Date(a.date) : new Date(0);
+                    const dateB = b.date ? new Date(b.date) : new Date(0);
+                    return dateB - dateA; // Descending
+                });
+                
+                updateInvestmentsTable();
+                
+            } catch (error) {
+                console.error("Error loading investments:", error);
+                const tbody = document.getElementById('investments-tbody');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #ccc;">
+                            <div class="no-data">
+                                <i class="fas fa-chart-line"></i><br>
+                                No investment requests found
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        
+        function updateInvestmentsTable() {
+            const tbody = document.getElementById('investments-tbody');
+            tbody.innerHTML = '';
+            
+            if (allInvestments.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #ccc;">
+                            <div class="no-data">
+                                <i class="fas fa-chart-line"></i><br>
+                                No investment requests found
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('investments-count').textContent = '0 investments';
+                return;
+            }
+            
+            document.getElementById('investments-count').textContent = `${allInvestments.length} investments`;
+            
+            allInvestments.forEach(investment => {
+                const row = tbody.insertRow();
+                const date = investment.date ? new Date(investment.date).toLocaleString() : 'N/A';
+                const user = allUsers.find(u => u.id === investment.userId);
+                const userName = user ? user.name : 'Unknown User';
+                
+                row.innerHTML = `
+                    <td>${userName}</td>
+                    <td>${investment.plan || 'N/A'}</td>
+                    <td><strong>$${investment.amount}</strong></td>
+                    <td><small>${date}</small></td>
+                    <td>
+                        <span class="status-badge status-${investment.status}">
+                            ${investment.status}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="action-btn activate-btn" onclick="approveInvestment('${investment.id}')"
+                                ${investment.status === 'completed' ? 'disabled' : ''} title="Approve">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button class="action-btn delete-btn" onclick="rejectInvestment('${investment.id}')"
+                                ${investment.status === 'rejected' ? 'disabled' : ''} title="Reject">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </td>
+                `;
+            });
+        }
+        
+        async function approveInvestment(transactionId) {
+            if (confirm('Approve this investment request?')) {
+                try {
+                    await db.collection('transactions').doc(transactionId).update({
+                        status: 'completed',
+                        processedAt: new Date().toISOString(),
+                        processedBy: 'admin'
+                    });
+                    
+                    alert('Investment approved!');
+                    loadInvestments();
+                    
+                } catch (error) {
+                    console.error("Error approving investment:", error);
+                    alert('Error approving investment: ' + error.message);
+                }
+            }
+        }
+        
+        async function rejectInvestment(transactionId) {
+            if (confirm('Reject this investment request?')) {
+                try {
+                    await db.collection('transactions').doc(transactionId).update({
+                        status: 'rejected',
+                        processedAt: new Date().toISOString(),
+                        processedBy: 'admin'
+                    });
+                    
+                    alert('Investment rejected!');
+                    loadInvestments();
+                    
+                } catch (error) {
+                    console.error("Error rejecting investment:", error);
+                    alert('Error rejecting investment: ' + error.message);
+                }
+            }
+        }
+        
+        // ==============================================
+        // SETTINGS MANAGEMENT
+        // ==============================================
+        async function saveSettings() {
+            const activationFee = document.getElementById('activation-fee').value;
+            const withdrawalFee = document.getElementById('withdrawal-fee').value;
+            const minWithdrawal = document.getElementById('min-withdrawal').value;
+            const referralBonus = document.getElementById('referral-bonus').value;
+            
+            try {
+                await db.collection('settings').doc('system').set({
+                    activationFee: parseFloat(activationFee),
+                    withdrawalFee: parseFloat(withdrawalFee),
+                    minWithdrawal: parseFloat(minWithdrawal),
+                    referralBonus: parseFloat(referralBonus),
+                    updatedAt: new Date().toISOString()
+                }, { merge: true });
+                
+                alert('Settings saved successfully!');
+                
+            } catch (error) {
+                console.error("Error saving settings:", error);
+                alert('Error saving settings: ' + error.message);
+            }
+        }
+        
+        // ==============================================
+        // SEARCH FUNCTIONALITY
+        // ==============================================
+        function searchTable() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const activeTab = document.querySelector('.tab-content.active').id;
+            
+            switch(activeTab) {
+                case 'users-tab':
+                    searchUsers(searchTerm);
+                    break;
+                case 'transactions-tab':
+                    searchTransactions(searchTerm);
+                    break;
+                case 'withdrawals-tab':
+                    searchWithdrawals(searchTerm);
+                    break;
+                case 'investments-tab':
+                    searchInvestments(searchTerm);
+                    break;
+            }
+        }
+        
+        function searchUsers(term) {
+            const tbody = document.getElementById('users-tbody');
+            if (!term) {
+                updateUsersTable();
+                return;
+            }
+            
+            const filteredUsers = allUsers.filter(user => 
+                (user.name && user.name.toLowerCase().includes(term)) ||
+                (user.email && user.email.toLowerCase().includes(term)) ||
+                (user.phone && user.phone.includes(term)) ||
+                (user.referralCode && user.referralCode.toLowerCase().includes(term))
+            );
+            
+            tbody.innerHTML = '';
+            
+            if (filteredUsers.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #ccc;">
+                            <div class="no-data">
+                                <i class="fas fa-search"></i><br>
+                                No users found matching "${term}"
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            filteredUsers.forEach(user => {
+                const row = tbody.insertRow();
+                const joinDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A';
+                
+                row.innerHTML = `
+                    <td>
+                        <strong>${user.name || 'N/A'}</strong><br>
+                        <small style="color: #666;">${user.phone || 'No phone'}</small>
+                    </td>
+                    <td>${user.email || 'N/A'}</td>
+                    <td>
+                        <strong style="color: #6ab8ff;">$${(user.balance || 0).toFixed(2)}</strong>
+                    </td>
+                    <td>
+                        <span class="status-badge ${user.isActive ? 'status-active' : 'status-inactive'}">
+                            ${user.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                    </td>
+                    <td>${joinDate}</td>
+                    <td>
+                        <button class="action-btn edit-btn" onclick="editUser('${user.id}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn ${user.isActive ? 'suspend-btn' : 'activate-btn'}" 
+                                onclick="${user.isActive ? 'suspendUser' : 'activateUser'}('${user.id}')">
+                            <i class="fas fa-${user.isActive ? 'ban' : 'check'}"></i>
+                        </button>
+                    </td>
+                `;
+            });
+        }
+        
+        // ==============================================
+        // UTILITY FUNCTIONS
+        // ==============================================
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        function showErrorMessage(element, message) {
+            if (element) {
+                element.textContent = message;
+                element.className = 'message error';
+                element.style.display = 'block';
+            } else {
+                alert('Error: ' + message);
+            }
+        }
+        
+        function showSuccessMessage(element, message) {
+            if (element) {
+                element.textContent = message;
+                element.className = 'message success';
+                element.style.display = 'block';
+                setTimeout(() => {
+                    element.style.display = 'none';
+                }, 3000);
+            } else { ;
+            }
+        }
+        
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
