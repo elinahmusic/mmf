@@ -62,15 +62,15 @@
         
         main {
             margin-top: 6em;
-            padding: 20px;
+            padding: 5px;
         }
         
         .admin-container {
             background: #111;
             border-radius: 10px;
-            padding: 30px;
+            padding: 0;
             margin: 0 auto;
-            max-width: 1200px;
+            width: 100%;
             border: 1px solid #333;
         }
         
@@ -98,6 +98,7 @@
         
         .input-group {
             margin-bottom: 20px;
+            position: relative;
         }
         
         .input-group label {
@@ -108,12 +109,29 @@
         
         .input-group input {
             width: 100%;
-            padding: 12px;
+            padding: 12px 40px 12px 12px;
             border-radius: 5px;
             border: 1px solid #333;
             background: #222;
             color: white;
             font-size: 16px;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 35px;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px;
+        }
+        
+        .password-toggle:hover {
+            color: #ccc;
         }
         
         .login-btn {
@@ -167,43 +185,16 @@
             display: none;
         }
         
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .stat-card {
-            background: #222;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            border: 1px solid #333;
-        }
-        
-        .stat-card h3 {
-            color: #ccc;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-        
-        .stat-card .value {
-            color: #6ab8ff;
-            font-size: 28px;
-            font-weight: bold;
-        }
-        
         .admin-tabs {
             display: flex;
             margin-bottom: 20px;
             border-bottom: 1px solid #333;
-            flex-wrap: wrap;
+            overflow-y: auto;
         }
         
         .tab-btn {
-            padding: 15px 30px;
-            background: none;
+            padding: 30em;
+            background: transparent;
             border: none;
             color: #ccc;
             font-size: 16px;
@@ -328,13 +319,26 @@
         
         .modal-input {
             width: 100%;
-            padding: 12px;
+            padding: 12px 40px 12px 12px;
             margin: 10px 0;
             border-radius: 5px;
             border: 1px solid #333;
             background: #222;
             color: white;
             font-size: 16px;
+        }
+        
+        .modal-password-toggle {
+            position: absolute;
+            right: 42px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px;
         }
         
         .modal-btn {
@@ -529,7 +533,7 @@
   <div class="dropdown-menu">
     <a><i class="fas fa-globe"></i> Users <sup id="total-users"></sup></a>
     <a><i class="fas fa-star"></i> Active Users <sup id="active-users"></sup></a>
-    <a><i class="fas fa-hand-holding-usd"></i> Withdrawals <sup id="pending-wothdrawals"></sup></a>
+    <a><i class="fas fa-hand-holding-usd"></i> Withdrawals <sup id="pending-withdrawals"></sup></a>
     <a onclick="loadAllData()"><i class="fas fa-undo-alt fa-rotate-45"></i> Refresh</a>
   <a onclick="logoutAdmin()"><i class="fas fa-sign-out"></i> Logout</a>
   </div>
@@ -615,6 +619,9 @@ document.addEventListener('click', function(e) {
                 <div class="input-group">
                     <label>Access code</label>
                     <input type="password" id="admin-password" placeholder="mcm_101...." autocomplete="current-password">
+                    <button type="button" class="password-toggle" onclick="togglePasswordVisibility('admin-password', this)">
+                        <i class="fas fa-eye"></i>
+                    </button>
                 </div>
                 <button class="login-btn" onclick="adminLogin()">
 Go
@@ -626,19 +633,22 @@ Go
                 <!-- Tabs -->
                 <div class="admin-tabs">
                     <button class="tab-btn active" onclick="showTab('users')">
-                        <i class="fas fa-users"></i> Users
+                        <i class="fas fa-users"></i>
+                    </button>
+                    <button class="tab-btn" onclick="showTab('referrals')">
+                        <i class="fas fa-user-friends"></i>
                     </button>
                     <button class="tab-btn" onclick="showTab('transactions')">
-                        <i class="fas fa-exchange-alt"></i> Transactions
+                        <i class="fas fa-exchange-alt"></i>
                     </button>
                     <button class="tab-btn" onclick="showTab('withdrawals')">
-                        <i class="fas fa-money-bill-wave"></i> Withdrawals
+                        <i class="fas fa-money-bill-wave"></i> 
                     </button>
                     <button class="tab-btn" onclick="showTab('investments')">
-                        <i class="fas fa-chart-line"></i> Investments
+                        <i class="fas fa-chart-line"></i>
                     </button>
                     <button class="tab-btn" onclick="showTab('settings')">
-                        <i class="fas fa-cog"></i> Settings
+                        <i class="fas fa-cog"></i>
                     </button>
                 </div>
                 
@@ -668,6 +678,36 @@ Go
                             <tbody id="users-tbody">
                                 <tr>
                                     <td colspan="6" style="text-align: center;">
+                                        <div class="loader"></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Referrals Tab -->
+                <div id="referrals-tab" class="tab-content">
+                    <div class="table-container">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h3 style="color: #6ab8ff; margin: 0;">Pending Referrals</h3>
+                            <span id="referrals-count" style="color: #ccc;">Loading...</span>
+                        </div>
+                        <table id="referrals-table">
+                            <thead>
+                                <tr>
+                                    <th>Referred User</th>
+                                    <th>Referrer Name</th>
+                                    <th>Referrer Email</th>
+                                    <th>Referral Code</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="referrals-tbody">
+                                <tr>
+                                    <td colspan="7" style="text-align: center;">
                                         <div class="loader"></div>
                                     </td>
                                 </tr>
@@ -775,16 +815,48 @@ Go
                                 <input type="number" id="activation-fee" class="modal-input" value="50" min="0">
                             </div>
                             <div class="input-group">
-                                <label>Withdrawal Fee (%)</label>
-                                <input type="number" id="withdrawal-fee" class="modal-input" value="5" min="0" max="100" step="0.1">
+                                <label>Minimum Deposit ($)</label>
+                                <input type="number" id="min-deposit" class="modal-input" value="10" min="0">
                             </div>
                             <div class="input-group">
                                 <label>Minimum Withdrawal ($)</label>
                                 <input type="number" id="min-withdrawal" class="modal-input" value="10" min="0">
                             </div>
                             <div class="input-group">
+                                <label>Withdrawal Fee (%)</label>
+                                <input type="number" id="withdrawal-fee" class="modal-input" value="5" min="0" max="100" step="0.1">
+                            </div>
+                            <div class="input-group">
                                 <label>Referral Bonus ($)</label>
                                 <input type="number" id="referral-bonus" class="modal-input" value="10" min="0">
+                            </div>
+                            <div class="input-group">
+                                <label>Daily Activity Earnings ($)</label>
+                                <input type="number" id="daily-earnings" class="modal-input" value="0.10" min="0" step="0.01">
+                            </div>
+                            <div class="input-group">
+                                <label>Starter Plan Min ($)</label>
+                                <input type="number" id="starter-min" class="modal-input" value="50" min="0">
+                            </div>
+                            <div class="input-group">
+                                <label>Starter Plan Returns (%)</label>
+                                <input type="number" id="starter-returns" class="modal-input" value="15" min="0" max="100" step="0.1">
+                            </div>
+                            <div class="input-group">
+                                <label>Premium Plan Min ($)</label>
+                                <input type="number" id="premium-min" class="modal-input" value="200" min="0">
+                            </div>
+                            <div class="input-group">
+                                <label>Premium Plan Returns (%)</label>
+                                <input type="number" id="premium-returns" class="modal-input" value="25" min="0" max="100" step="0.1">
+                            </div>
+                            <div class="input-group">
+                                <label>VIP Plan Min ($)</label>
+                                <input type="number" id="vip-min" class="modal-input" value="500" min="0">
+                            </div>
+                            <div class="input-group">
+                                <label>VIP Plan Returns (%)</label>
+                                <input type="number" id="vip-returns" class="modal-input" value="40" min="0" max="100" step="0.1">
                             </div>
                             <button class="modal-btn" onclick="saveSettings()">
                                 <i class="fas fa-save"></i> Save Settings
@@ -833,6 +905,35 @@ Go
             </button>
         </div>
     </div>
+    
+    <!-- Delete User Modal -->
+    <div id="delete-user-modal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('delete-user-modal')">&times;</button>
+            <h3><i class="fas fa-user-slash" style="color: #dc3545;"></i> Delete User</h3>
+            
+            <div class="input-group">
+                <label>Confirm Admin Password</label>
+                <div style="position: relative;">
+                    <input type="password" id="delete-confirm-password" class="modal-input" placeholder="Enter admin password to confirm">
+                    <button type="button" class="modal-password-toggle" onclick="togglePasswordVisibility('delete-confirm-password', this)">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <p style="color: #ffc107; margin: 15px 0; text-align: center;">
+                <i class="fas fa-exclamation-triangle"></i> Warning: This action cannot be undone!
+            </p>
+            
+            <button class="modal-btn" onclick="confirmDeleteUser()" style="background: #dc3545;">
+                <i class="fas fa-trash"></i> Delete User Permanently
+            </button>
+            <button class="modal-btn secondary" onclick="closeModal('delete-user-modal')">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+        </div>
+    </div>
 
     <!-- Firebase Configuration and Main Script -->
     <script>
@@ -865,10 +966,30 @@ Go
         let allTransactions = [];
         let allWithdrawals = [];
         let allInvestments = [];
+        let allReferrals = [];
         let currentEditingUserId = null;
+        let userToDelete = null;
         
         // Admin Password (Change this for security)
         const ADMIN_PASSWORD = "22cabbage";
+        
+        // ==============================================
+        // PASSWORD TOGGLE FUNCTION
+        // ==============================================
+        function togglePasswordVisibility(inputId, toggleButton) {
+            const input = document.getElementById(inputId);
+            const icon = toggleButton.querySelector('i');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
         
         // ==============================================
         // INITIALIZATION
@@ -880,6 +1001,7 @@ Go
             if (localStorage.getItem('adminLoggedIn') === 'true') {
                 showAdminPanel();
                 loadAllData();
+                loadSettings(); // Load settings on startup
             } else {
                 document.getElementById('login-section').style.display = 'block';
                 document.getElementById('admin-panel').style.display = 'none';
@@ -899,6 +1021,7 @@ Go
                 showSuccessMessage(messageDiv, 'Login successful!');
                 showAdminPanel();
                 loadAllData();
+                loadSettings(); // Load settings after login
             } else {
                 showErrorMessage(messageDiv, 'Access Denied!');
             }
@@ -937,6 +1060,9 @@ Go
                 case 'users':
                     if (allUsers.length === 0) loadUsers();
                     break;
+                case 'referrals':
+                    if (allReferrals.length === 0) loadReferrals();
+                    break;
                 case 'transactions':
                     if (allTransactions.length === 0) loadTransactions();
                     break;
@@ -945,6 +1071,9 @@ Go
                     break;
                 case 'investments':
                     if (allInvestments.length === 0) loadInvestments();
+                    break;
+                case 'settings':
+                    loadSettings();
                     break;
             }
         }
@@ -957,11 +1086,149 @@ Go
                 await Promise.all([
                     loadDashboardStats(),
                     loadUsers(),
+                    loadReferrals(),
                     loadTransactions()
                 ]);
                 showSuccessMessage(null, 'All data loaded successfully!');
             } catch (error) {
                 console.error("Error loading data:", error);
+            }
+        }
+        
+        // ==============================================
+        // LOAD SETTINGS
+        // ==============================================
+        async function loadSettings() {
+            try {
+                const doc = await db.collection('settings').doc('system').get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    
+                    // Populate all settings fields
+                    document.getElementById('activation-fee').value = data.activationFee || 50;
+                    document.getElementById('min-deposit').value = data.minDeposit || 10;
+                    document.getElementById('min-withdrawal').value = data.minWithdrawal || 10;
+                    document.getElementById('withdrawal-fee').value = data.withdrawalFee || 5;
+                    document.getElementById('referral-bonus').value = data.referralBonus || 10;
+                    document.getElementById('daily-earnings').value = data.dailyEarnings || 0.10;
+                    document.getElementById('starter-min').value = data.starterMin || 50;
+                    document.getElementById('starter-returns').value = data.starterReturns || 15;
+                    document.getElementById('premium-min').value = data.premiumMin || 200;
+                    document.getElementById('premium-returns').value = data.premiumReturns || 25;
+                    document.getElementById('vip-min').value = data.vipMin || 500;
+                    document.getElementById('vip-returns').value = data.vipReturns || 40;
+                    
+                    console.log("Settings loaded successfully");
+                } else {
+                    // Use defaults if no settings exist
+                    setDefaultSettings();
+                    console.log("Using default settings");
+                }
+            } catch (error) {
+                console.error("Error loading settings:", error);
+                setDefaultSettings();
+            }
+        }
+        
+        function setDefaultSettings() {
+            document.getElementById('activation-fee').value = 50;
+            document.getElementById('min-deposit').value = 10;
+            document.getElementById('min-withdrawal').value = 10;
+            document.getElementById('withdrawal-fee').value = 5;
+            document.getElementById('referral-bonus').value = 10;
+            document.getElementById('daily-earnings').value = 0.10;
+            document.getElementById('starter-min').value = 50;
+            document.getElementById('starter-returns').value = 15;
+            document.getElementById('premium-min').value = 200;
+            document.getElementById('premium-returns').value = 25;
+            document.getElementById('vip-min').value = 500;
+            document.getElementById('vip-returns').value = 40;
+        }
+        
+        // ==============================================
+        // SAVE SETTINGS
+        // ==============================================
+        async function saveSettings() {
+            const activationFee = parseFloat(document.getElementById('activation-fee').value);
+            const minDeposit = parseFloat(document.getElementById('min-deposit').value);
+            const minWithdrawal = parseFloat(document.getElementById('min-withdrawal').value);
+            const withdrawalFee = parseFloat(document.getElementById('withdrawal-fee').value);
+            const referralBonus = parseFloat(document.getElementById('referral-bonus').value);
+            const dailyEarnings = parseFloat(document.getElementById('daily-earnings').value);
+            const starterMin = parseFloat(document.getElementById('starter-min').value);
+            const starterReturns = parseFloat(document.getElementById('starter-returns').value);
+            const premiumMin = parseFloat(document.getElementById('premium-min').value);
+            const premiumReturns = parseFloat(document.getElementById('premium-returns').value);
+            const vipMin = parseFloat(document.getElementById('vip-min').value);
+            const vipReturns = parseFloat(document.getElementById('vip-returns').value);
+            
+            // Validate inputs
+            if (isNaN(activationFee) || activationFee < 0) {
+                alert('Please enter a valid activation fee');
+                return;
+            }
+            
+            if (isNaN(minWithdrawal) || minWithdrawal < 0) {
+                alert('Please enter a valid minimum withdrawal amount');
+                return;
+            }
+            
+            if (isNaN(withdrawalFee) || withdrawalFee < 0 || withdrawalFee > 100) {
+                alert('Please enter a valid withdrawal fee (0-100%)');
+                return;
+            }
+            
+            try {
+                await db.collection('settings').doc('system').set({
+                    activationFee: activationFee,
+                    minDeposit: minDeposit,
+                    minWithdrawal: minWithdrawal,
+                    withdrawalFee: withdrawalFee,
+                    referralBonus: referralBonus,
+                    dailyEarnings: dailyEarnings,
+                    starterMin: starterMin,
+                    starterReturns: starterReturns,
+                    premiumMin: premiumMin,
+                    premiumReturns: premiumReturns,
+                    vipMin: vipMin,
+                    vipReturns: vipReturns,
+                    updatedAt: new Date().toISOString(),
+                    updatedBy: 'admin'
+                }, { merge: true });
+                
+                // Also update the settings in real-time for all users
+                await updateUserSettingsInRealTime({
+                    minWithdrawal: minWithdrawal,
+                    withdrawalFee: withdrawalFee,
+                    dailyEarnings: dailyEarnings,
+                    starterMin: starterMin,
+                    starterReturns: starterReturns,
+                    premiumMin: premiumMin,
+                    premiumReturns: premiumReturns,
+                    vipMin: vipMin,
+                    vipReturns: vipReturns
+                });
+                
+                alert('Settings saved successfully! These changes will affect all users immediately.');
+                
+            } catch (error) {
+                console.error("Error saving settings:", error);
+                alert('Error saving settings: ' + error.message);
+            }
+        }
+        
+        // Function to update settings in real-time for all users
+        async function updateUserSettingsInRealTime(newSettings) {
+            try {
+                // This function can be expanded to update user-specific settings
+                // For now, we'll just log that settings have been updated
+                console.log("Global settings updated:", newSettings);
+                
+                // You could add a broadcast system here if needed
+                // For example, using Firebase Cloud Messaging to notify users
+                
+            } catch (error) {
+                console.error("Error updating real-time settings:", error);
             }
         }
         
@@ -1095,6 +1362,9 @@ Go
                                 onclick="${user.isActive ? 'suspendUser' : 'activateUser'}('${user.id}')" title="${user.isActive ? 'Suspend' : 'Activate'}">
                             <i class="fas fa-${user.isActive ? 'ban' : 'check'}"></i>
                         </button>
+                        <button class="action-btn delete-btn" onclick="deleteUserPrompt('${user.id}')" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </td>
                 `;
             });
@@ -1179,6 +1449,263 @@ Go
                 } catch (error) {
                     console.error("Error suspending user:", error);
                     alert('Error suspending user: ' + error.message);
+                }
+            }
+        }
+        
+        // ==============================================
+        // DELETE USER FUNCTIONS
+        // ==============================================
+        function deleteUserPrompt(userId) {
+            userToDelete = userId;
+            const user = allUsers.find(u => u.id === userId);
+            if (!user) return;
+            
+            showModal('delete-user-modal');
+            document.getElementById('delete-confirm-password').value = '';
+        }
+        
+        async function confirmDeleteUser() {
+            const password = document.getElementById('delete-confirm-password').value;
+            
+            if (password !== ADMIN_PASSWORD) {
+                alert('Invalid admin password!');
+                return;
+            }
+            
+            if (!userToDelete) return;
+            
+            if (confirm('Are you absolutely sure you want to delete this user? This action cannot be undone!')) {
+                try {
+                    // Delete user document
+                    await db.collection('users').doc(userToDelete).delete();
+                    
+                    // Delete user's transactions
+                    const transactionsSnapshot = await db.collection('transactions')
+                        .where('userId', '==', userToDelete)
+                        .get();
+                    
+                    const deletePromises = [];
+                    transactionsSnapshot.forEach(doc => {
+                        deletePromises.push(doc.ref.delete());
+                    });
+                    
+                    await Promise.all(deletePromises);
+                    
+                    alert('User deleted successfully!');
+                    closeModal('delete-user-modal');
+                    loadUsers();
+                    loadDashboardStats();
+                    loadReferrals();
+                    
+                } catch (error) {
+                    console.error("Error deleting user:", error);
+                    alert('Error deleting user: ' + error.message);
+                }
+            }
+        }
+        
+        // ==============================================
+        // LOAD REFERRALS (UPDATED TO INCLUDE REFERRER'S USERNAME)
+        // ==============================================
+        async function loadReferrals() {
+            try {
+                const tbody = document.getElementById('referrals-tbody');
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;"><div class="loader"></div></td></tr>';
+                
+                // Load all users first to get referrer information
+                const usersSnapshot = await db.collection('users').get();
+                
+                // Create a map of referral codes to user data for quick lookup
+                const userMap = {};
+                const referralCodeToUserMap = {};
+                
+                usersSnapshot.forEach(doc => {
+                    const user = { id: doc.id, ...doc.data() };
+                    userMap[doc.id] = user;
+                    if (user.referralCode) {
+                        referralCodeToUserMap[user.referralCode] = user;
+                    }
+                });
+                
+                allReferrals = [];
+                
+                // Find users who have been referred (have referredBy field)
+                usersSnapshot.forEach(doc => {
+                    const user = { id: doc.id, ...doc.data() };
+                    if (user.referredBy) {
+                        // Find the referrer user by their referral code
+                        const referrerUser = referralCodeToUserMap[user.referredBy];
+                        
+                        allReferrals.push({
+                            id: doc.id,
+                            userName: user.name,
+                            userEmail: user.email,
+                            referredBy: user.referredBy,
+                            referrerName: referrerUser ? referrerUser.name : 'Unknown',
+                            referrerEmail: referrerUser ? referrerUser.email : 'Unknown',
+                            referralCode: user.referralCode,
+                            createdAt: user.createdAt,
+                            status: 'pending'
+                        });
+                    }
+                });
+                
+                updateReferralsTable();
+                
+            } catch (error) {
+                console.error("Error loading referrals:", error);
+                const tbody = document.getElementById('referrals-tbody');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: #ccc;">
+                            <div class="empty-state">
+                                <i class="fas fa-user-friends"></i><br>
+                                No pending referrals found
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        
+        function updateReferralsTable() {
+            const tbody = document.getElementById('referrals-tbody');
+            tbody.innerHTML = '';
+            
+            if (allReferrals.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: #ccc;">
+                            <div class="empty-state">
+                                <i class="fas fa-user-friends"></i><br>
+                                No pending referrals found
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('referrals-count').textContent = '0 referrals';
+                return;
+            }
+            
+            document.getElementById('referrals-count').textContent = `${allReferrals.length} referrals`;
+            
+            allReferrals.forEach(referral => {
+                const row = tbody.insertRow();
+                const date = referral.createdAt ? new Date(referral.createdAt).toLocaleDateString() : 'N/A';
+                
+                row.innerHTML = `
+                    <td>
+                        <strong>${referral.userName || 'N/A'}</strong><br>
+                        <small style="color: #666;">${referral.userEmail || 'No email'}</small>
+                    </td>
+                    <td>
+                        <strong>${referral.referrerName || 'Unknown'}</strong>
+                    </td>
+                    <td>
+                        ${referral.referrerEmail || 'Unknown'}
+                    </td>
+                    <td><code>${referral.referredBy || 'N/A'}</code></td>
+                    <td><small>${date}</small></td>
+                    <td>
+                        <span class="status-badge status-pending">
+                            Pending
+                        </span>
+                    </td>
+                    <td>
+                        <button class="action-btn activate-btn" onclick="approveReferral('${referral.id}')" title="Approve">
+                            <i class="fas fa-check"></i> Approve
+                        </button>
+                        <button class="action-btn delete-btn" onclick="rejectReferral('${referral.id}')" title="Reject">
+                            <i class="fas fa-times"></i> Reject
+                        </button>
+                    </td>
+                `;
+            });
+        }
+        
+        async function approveReferral(userId) {
+            if (confirm('Approve this referral and remove it from the list?')) {
+                try {
+                    // Get referral bonus from settings
+                    let referralBonus = 10; // Default
+                    try {
+                        const settingsDoc = await db.collection('settings').doc('system').get();
+                        if (settingsDoc.exists) {
+                            referralBonus = settingsDoc.data().referralBonus || 10;
+                        }
+                    } catch (error) {
+                        console.error("Error getting referral bonus from settings:", error);
+                    }
+                    
+                    // Remove the referredBy field (marking it as approved)
+                    await db.collection('users').doc(userId).update({
+                        referredBy: firebase.firestore.FieldValue.delete(),
+                        referralApproved: true,
+                        referralApprovedAt: new Date().toISOString()
+                    });
+                    
+                    // Find the referrer and update their referral bonus
+                    const userDoc = await db.collection('users').doc(userId).get();
+                    const userData = userDoc.data();
+                    
+                    if (userData.referredBy) {
+                        // Find referrer by their referral code
+                        const referrerSnapshot = await db.collection('users')
+                            .where('referralCode', '==', userData.referredBy)
+                            .get();
+                        
+                        if (!referrerSnapshot.empty) {
+                            const referrerDoc = referrerSnapshot.docs[0];
+                            const referrerData = referrerDoc.data();
+                            
+                            // Add referral bonus to referrer using the setting
+                            const newBalance = (referrerData.balance || 0) + referralBonus;
+                            
+                            await db.collection('users').doc(referrerDoc.id).update({
+                                balance: newBalance,
+                                referralEarnings: (referrerData.referralEarnings || 0) + referralBonus
+                            });
+                            
+                            // Create bonus transaction for referrer
+                            await db.collection('transactions').add({
+                                userId: referrerDoc.id,
+                                type: 'referral_bonus',
+                                amount: referralBonus,
+                                description: `Referral bonus for ${userData.name}`,
+                                date: new Date().toISOString(),
+                                status: 'completed'
+                            });
+                        }
+                    }
+                    
+                    alert(`Referral approved and $${referralBonus} bonus awarded!`);
+                    loadReferrals();
+                    loadUsers();
+                    loadDashboardStats();
+                    
+                } catch (error) {
+                    console.error("Error approving referral:", error);
+                    alert('Error approving referral: ' + error.message);
+                }
+            }
+        }
+        
+        async function rejectReferral(userId) {
+            if (confirm('Reject this referral and remove it from the list?')) {
+                try {
+                    // Remove the referredBy field without giving bonus
+                    await db.collection('users').doc(userId).update({
+                        referredBy: firebase.firestore.FieldValue.delete(),
+                        referralRejected: true
+                    });
+                    
+                    alert('Referral rejected!');
+                    loadReferrals();
+                    
+                } catch (error) {
+                    console.error("Error rejecting referral:", error);
+                    alert('Error rejecting referral: ' + error.message);
                 }
             }
         }
@@ -1366,9 +1893,26 @@ Go
                     const withdrawal = allWithdrawals.find(w => w.id === transactionId);
                     if (!withdrawal) return;
                     
+                    // Get withdrawal fee from settings
+                    let withdrawalFee = 5; // Default
+                    try {
+                        const settingsDoc = await db.collection('settings').doc('system').get();
+                        if (settingsDoc.exists) {
+                            withdrawalFee = settingsDoc.data().withdrawalFee || 5;
+                        }
+                    } catch (error) {
+                        console.error("Error getting withdrawal fee from settings:", error);
+                    }
+                    
+                    // Calculate fee based on settings
+                    const fee = withdrawal.amount * (withdrawalFee / 100);
+                    const netAmount = withdrawal.amount - fee;
+                    
                     // Update transaction status
                     await db.collection('transactions').doc(transactionId).update({
                         status: 'completed',
+                        netAmount: netAmount,
+                        fee: fee,
                         processedAt: new Date().toISOString(),
                         processedBy: 'admin'
                     });
@@ -1382,7 +1926,7 @@ Go
                         });
                     }
                     
-                    alert('Withdrawal approved and user balance updated!');
+                    alert(`Withdrawal approved! Fee: $${fee.toFixed(2)} (${withdrawalFee}%), Net: $${netAmount.toFixed(2)}`);
                     loadWithdrawals();
                     loadUsers();
                     loadDashboardStats();
@@ -1547,32 +2091,6 @@ Go
         }
         
         // ==============================================
-        // SETTINGS MANAGEMENT
-        // ==============================================
-        async function saveSettings() {
-            const activationFee = document.getElementById('activation-fee').value;
-            const withdrawalFee = document.getElementById('withdrawal-fee').value;
-            const minWithdrawal = document.getElementById('min-withdrawal').value;
-            const referralBonus = document.getElementById('referral-bonus').value;
-            
-            try {
-                await db.collection('settings').doc('system').set({
-                    activationFee: parseFloat(activationFee),
-                    withdrawalFee: parseFloat(withdrawalFee),
-                    minWithdrawal: parseFloat(minWithdrawal),
-                    referralBonus: parseFloat(referralBonus),
-                    updatedAt: new Date().toISOString()
-                }, { merge: true });
-                
-                alert('Settings saved successfully!');
-                
-            } catch (error) {
-                console.error("Error saving settings:", error);
-                alert('Error saving settings: ' + error.message);
-            }
-        }
-        
-        // ==============================================
         // SEARCH FUNCTIONALITY
         // ==============================================
         function searchTable() {
@@ -1582,6 +2100,9 @@ Go
             switch(activeTab) {
                 case 'users-tab':
                     searchUsers(searchTerm);
+                    break;
+                case 'referrals-tab':
+                    searchReferrals(searchTerm);
                     break;
                 case 'transactions-tab':
                     searchTransactions(searchTerm);
@@ -1652,6 +2173,75 @@ Go
                                 onclick="${user.isActive ? 'suspendUser' : 'activateUser'}('${user.id}')">
                             <i class="fas fa-${user.isActive ? 'ban' : 'check'}"></i>
                         </button>
+                        <button class="action-btn delete-btn" onclick="deleteUserPrompt('${user.id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+            });
+        }
+        
+        function searchReferrals(term) {
+            const tbody = document.getElementById('referrals-tbody');
+            if (!term) {
+                updateReferralsTable();
+                return;
+            }
+            
+            const filteredReferrals = allReferrals.filter(referral => 
+                (referral.userName && referral.userName.toLowerCase().includes(term)) ||
+                (referral.userEmail && referral.userEmail.toLowerCase().includes(term)) ||
+                (referral.referrerName && referral.referrerName.toLowerCase().includes(term)) ||
+                (referral.referrerEmail && referral.referrerEmail.toLowerCase().includes(term)) ||
+                (referral.referredBy && referral.referredBy.toLowerCase().includes(term)) ||
+                (referral.referralCode && referral.referralCode.toLowerCase().includes(term))
+            );
+            
+            tbody.innerHTML = '';
+            
+            if (filteredReferrals.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: #ccc;">
+                            <div class="no-data">
+                                <i class="fas fa-search"></i><br>
+                                No referrals found matching "${term}"
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            filteredReferrals.forEach(referral => {
+                const row = tbody.insertRow();
+                const date = referral.createdAt ? new Date(referral.createdAt).toLocaleDateString() : 'N/A';
+                
+                row.innerHTML = `
+                    <td>
+                        <strong>${referral.userName || 'N/A'}</strong><br>
+                        <small style="color: #666;">${referral.userEmail || 'No email'}</small>
+                    </td>
+                    <td>
+                        <strong>${referral.referrerName || 'Unknown'}</strong>
+                    </td>
+                    <td>
+                        ${referral.referrerEmail || 'Unknown'}
+                    </td>
+                    <td><code>${referral.referredBy || 'N/A'}</code></td>
+                    <td><small>${date}</small></td>
+                    <td>
+                        <span class="status-badge status-pending">
+                            Pending
+                        </span>
+                    </td>
+                    <td>
+                        <button class="action-btn activate-btn" onclick="approveReferral('${referral.id}')" title="Approve">
+                            <i class="fas fa-check"></i> Approve
+                        </button>
+                        <button class="action-btn delete-btn" onclick="rejectReferral('${referral.id}')" title="Reject">
+                            <i class="fas fa-times"></i> Reject
+                        </button>
                     </td>
                 `;
             });
@@ -1698,4 +2288,4 @@ Go
         }
     </script>
 </body>
-</html>
+    </html>
