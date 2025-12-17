@@ -309,6 +309,8 @@
             max-width: 500px;
             border: 1px solid #333;
             position: relative;
+            height: 70%;
+            overflow-y: auto;
         }
         
         .modal h3 {
@@ -535,6 +537,7 @@
     <a><i class="fas fa-star"></i> Active Users <sup id="active-users"></sup></a>
     <a><i class="fas fa-hand-holding-usd"></i> Withdrawals <sup id="pending-withdrawals"></sup></a>
     <a onclick="loadAllData()"><i class="fas fa-undo-alt fa-rotate-45"></i> Refresh</a>
+    <a onclick="showCreateTransactionModal()"><i class="fas fa-plus-circle"></i> Create Transaction</a>
   <a onclick="logoutAdmin()"><i class="fas fa-sign-out"></i> Logout</a>
   </div>
 </div>
@@ -697,8 +700,7 @@ Go
                             <thead>
                                 <tr>
                                     <th>Referred User</th>
-                                    <th>Referrer Name</th>
-                                    <th>Referrer Email</th>
+                                    <th>Referrer</th>
                                     <th>Referral Code</th>
                                     <th>Date</th>
                                     <th>Status</th>
@@ -707,7 +709,7 @@ Go
                             </thead>
                             <tbody id="referrals-tbody">
                                 <tr>
-                                    <td colspan="7" style="text-align: center;">
+                                    <td colspan="6" style="text-align: center;">
                                         <div class="loader"></div>
                                     </td>
                                 </tr>
@@ -930,6 +932,69 @@ Go
                 <i class="fas fa-trash"></i> Delete User Permanently
             </button>
             <button class="modal-btn secondary" onclick="closeModal('delete-user-modal')">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+        </div>
+    </div>
+    
+    <!-- Create Transaction Modal -->
+    <div id="create-transaction-modal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('create-transaction-modal')">&times;</button>
+            <h3><i class="fas fa-plus-circle"></i> Create Transaction</h3>
+            
+            <div class="input-group">
+                <label>Select User</label>
+                <select id="transaction-user" class="modal-input" onchange="updateUserInfo()">
+                    <option value="">Select a user...</option>
+                    <!-- Users will be populated here -->
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label>Transaction Type</label>
+                <select id="transaction-type" class="modal-input">
+                    <option value="withdrawal">Withdrawal</option>
+                    <option value="deposit">Deposit</option>
+                    <option value="earning">Earning</option>
+                    <option value="bonus">Bonus</option>
+                    <option value="investment">Investment</option>
+                    <option value="referral_bonus">Referral Bonus</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label>Amount ($)</label>
+                <input type="number" id="transaction-amount" class="modal-input" placeholder="Enter amount" min="0.01" step="0.01">
+            </div>
+            
+            <div class="input-group">
+                <label>Custom Message / Description</label>
+                <textarea id="transaction-description" class="modal-input" placeholder="Enter custom message for the user" rows="3"></textarea>
+            </div>
+            
+            <div class="input-group">
+                <label>Transaction Status</label>
+                <select id="transaction-status" class="modal-input">
+                    <option value="completed">Completed</option>
+                    <option value="pending">Pending</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+            </div>
+            
+            <div id="user-balance-info" style="background: rgba(106, 184, 255, 0.1); padding: 10px; border-radius: 5px; margin: 10px 0; display: none;">
+                <p style="color: #6ab8ff; margin: 0;">Current Balance: $<span id="current-user-balance">0.00</span></p>
+            </div>
+            
+            <div id="transaction-warning" style="background: rgba(255, 193, 7, 0.1); padding: 10px; border-radius: 5px; margin: 10px 0; display: none;">
+                <p style="color: #ffc107; margin: 0; font-size: 14px;" id="warning-message"></p>
+            </div>
+            
+            <button class="modal-btn" onclick="createTransaction()">
+                <i class="fas fa-check"></i> Create Transaction
+            </button>
+            <button class="modal-btn secondary" onclick="closeModal('create-transaction-modal')">
                 <i class="fas fa-times"></i> Cancel
             </button>
         </div>
@@ -1506,44 +1571,215 @@ Go
         }
         
         // ==============================================
-        // LOAD REFERRALS (UPDATED TO INCLUDE REFERRER'S USERNAME)
+        // CREATE TRANSACTION FUNCTIONALITY
+        // ==============================================
+        function showCreateTransactionModal() {
+            // Populate user dropdown
+            const userSelect = document.getElementById('transaction-user');
+            userSelect.innerHTML = '<option value="">Select a user...</option>';
+            
+            allUsers.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.textContent = `${user.name} (${user.email}) - Balance: $${(user.balance || 0).toFixed(2)}`;
+                userSelect.appendChild(option);
+            });
+            
+            // Reset form
+            document.getElementById('transaction-type').value = 'withdrawal';
+            document.getElementById('transaction-amount').value = '';
+            document.getElementById('transaction-description').value = '';
+            document.getElementById('transaction-status').value = 'completed';
+            document.getElementById('user-balance-info').style.display = 'none';
+            document.getElementById('transaction-warning').style.display = 'none';
+            
+            showModal('create-transaction-modal');
+        }
+        
+        function updateUserInfo() {
+            const userId = document.getElementById('transaction-user').value;
+            const userBalanceInfo = document.getElementById('user-balance-info');
+            const transactionWarning = document.getElementById('transaction-warning');
+            
+            if (!userId) {
+                userBalanceInfo.style.display = 'none';
+                transactionWarning.style.display = 'none';
+                return;
+            }
+            
+            const user = allUsers.find(u => u.id === userId);
+            if (user) {
+                document.getElementById('current-user-balance').textContent = (user.balance || 0).toFixed(2);
+                userBalanceInfo.style.display = 'block';
+                
+                // Update warning based on transaction type
+                updateTransactionWarning();
+            }
+        }
+        
+        function updateTransactionWarning() {
+            const userId = document.getElementById('transaction-user').value;
+            const transactionType = document.getElementById('transaction-type').value;
+            const transactionAmount = parseFloat(document.getElementById('transaction-amount').value) || 0;
+            const transactionWarning = document.getElementById('transaction-warning');
+            
+            if (!userId || transactionAmount <= 0) {
+                transactionWarning.style.display = 'none';
+                return;
+            }
+            
+            const user = allUsers.find(u => u.id === userId);
+            if (!user) return;
+            
+            const currentBalance = user.balance || 0;
+            
+            if (transactionType === 'withdrawal' && transactionAmount > currentBalance) {
+                document.getElementById('warning-message').textContent = 
+                    `Warning: User has insufficient balance! Current: $${currentBalance.toFixed(2)}, Withdrawal: $${transactionAmount.toFixed(2)}`;
+                transactionWarning.style.display = 'block';
+            } else if (transactionType === 'deposit') {
+                document.getElementById('warning-message').textContent = 
+                    `This will add $${transactionAmount.toFixed(2)} to user's balance. New balance: $${(currentBalance + transactionAmount).toFixed(2)}`;
+                transactionWarning.style.display = 'block';
+            } else if (transactionType === 'withdrawal') {
+                document.getElementById('warning-message').textContent = 
+                    `This will deduct $${transactionAmount.toFixed(2)} from user's balance. New balance: $${(currentBalance - transactionAmount).toFixed(2)}`;
+                transactionWarning.style.display = 'block';
+            } else {
+                transactionWarning.style.display = 'none';
+            }
+        }
+        
+        // Add event listeners for real-time warning updates
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('transaction-type').addEventListener('change', updateTransactionWarning);
+            document.getElementById('transaction-amount').addEventListener('input', updateTransactionWarning);
+        });
+        
+        async function createTransaction() {
+            const userId = document.getElementById('transaction-user').value;
+            const transactionType = document.getElementById('transaction-type').value;
+            const transactionAmount = parseFloat(document.getElementById('transaction-amount').value);
+            const transactionDescription = document.getElementById('transaction-description').value.trim();
+            const transactionStatus = document.getElementById('transaction-status').value;
+            
+            // Validation
+            if (!userId) {
+                alert('Please select a user');
+                return;
+            }
+            
+            if (!transactionAmount || transactionAmount <= 0) {
+                alert('Please enter a valid amount');
+                return;
+            }
+            
+            if (!transactionDescription) {
+                alert('Please enter a transaction description/message');
+                return;
+            }
+            
+            const user = allUsers.find(u => u.id === userId);
+            if (!user) {
+                alert('User not found');
+                return;
+            }
+            
+            const currentBalance = user.balance || 0;
+            
+            // Check balance for withdrawals
+            if (transactionType === 'withdrawal' && transactionAmount > currentBalance) {
+                if (!confirm(`User has insufficient balance! Current: $${currentBalance.toFixed(2)}\nDo you want to proceed anyway?`)) {
+                    return;
+                }
+            }
+            
+            try {
+                // Create transaction in Firestore
+                const transactionData = {
+                    userId: userId,
+                    type: transactionType,
+                    amount: transactionAmount,
+                    description: transactionDescription,
+                    status: transactionStatus,
+                    date: new Date().toISOString(),
+                    createdBy: 'admin',
+                    adminNotes: 'Admin created transaction'
+                };
+                
+                // Add additional fields based on transaction type
+                if (transactionType === 'withdrawal') {
+                    transactionData.method = 'admin';
+                    transactionData.wallet = 'Processed by admin';
+                    transactionData.netAmount = transactionAmount;
+                }
+                
+                const transactionRef = await db.collection('transactions').add(transactionData);
+                
+                // Update user balance based on transaction type and status
+                if (transactionStatus === 'completed') {
+                    let newBalance = currentBalance;
+                    
+                    if (transactionType === 'withdrawal') {
+                        newBalance -= transactionAmount;
+                    } else if (transactionType === 'deposit' || transactionType === 'earning' || 
+                               transactionType === 'bonus' || transactionType === 'referral_bonus') {
+                        newBalance += transactionAmount;
+                    }
+                    // Note: investment type might need special handling
+                    
+                    // Update user balance in Firestore
+                    await db.collection('users').doc(userId).update({
+                        balance: newBalance,
+                        updatedAt: new Date().toISOString()
+                    });
+                    
+                    // Update total earnings if it's an earning
+                    if (transactionType === 'earning') {
+                        await db.collection('users').doc(userId).update({
+                            totalEarnings: firebase.firestore.FieldValue.increment(transactionAmount)
+                        });
+                    }
+                }
+                
+                alert('Transaction created successfully!');
+                closeModal('create-transaction-modal');
+                
+                // Refresh data
+                loadUsers();
+                loadTransactions();
+                loadDashboardStats();
+                
+                // If this was a withdrawal, refresh withdrawals tab
+                if (transactionType === 'withdrawal') {
+                    loadWithdrawals();
+                }
+                
+            } catch (error) {
+                console.error("Error creating transaction:", error);
+                alert('Error creating transaction: ' + error.message);
+            }
+        }
+        
+        // ==============================================
+        // LOAD REFERRALS
         // ==============================================
         async function loadReferrals() {
             try {
                 const tbody = document.getElementById('referrals-tbody');
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;"><div class="loader"></div></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;"><div class="loader"></div></td></tr>';
                 
-                // Load all users first to get referrer information
-                const usersSnapshot = await db.collection('users').get();
-                
-                // Create a map of referral codes to user data for quick lookup
-                const userMap = {};
-                const referralCodeToUserMap = {};
-                
-                usersSnapshot.forEach(doc => {
-                    const user = { id: doc.id, ...doc.data() };
-                    userMap[doc.id] = user;
-                    if (user.referralCode) {
-                        referralCodeToUserMap[user.referralCode] = user;
-                    }
-                });
-                
+                const snapshot = await db.collection('users').get();
                 allReferrals = [];
                 
-                // Find users who have been referred (have referredBy field)
-                usersSnapshot.forEach(doc => {
+                snapshot.forEach(doc => {
                     const user = { id: doc.id, ...doc.data() };
                     if (user.referredBy) {
-                        // Find the referrer user by their referral code
-                        const referrerUser = referralCodeToUserMap[user.referredBy];
-                        
                         allReferrals.push({
                             id: doc.id,
                             userName: user.name,
                             userEmail: user.email,
                             referredBy: user.referredBy,
-                            referrerName: referrerUser ? referrerUser.name : 'Unknown',
-                            referrerEmail: referrerUser ? referrerUser.email : 'Unknown',
                             referralCode: user.referralCode,
                             createdAt: user.createdAt,
                             status: 'pending'
@@ -1558,7 +1794,7 @@ Go
                 const tbody = document.getElementById('referrals-tbody');
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" style="text-align: center; color: #ccc;">
+                        <td colspan="6" style="text-align: center; color: #ccc;">
                             <div class="empty-state">
                                 <i class="fas fa-user-friends"></i><br>
                                 No pending referrals found
@@ -1576,7 +1812,7 @@ Go
             if (allReferrals.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" style="text-align: center; color: #ccc;">
+                        <td colspan="6" style="text-align: center; color: #ccc;">
                             <div class="empty-state">
                                 <i class="fas fa-user-friends"></i><br>
                                 No pending referrals found
@@ -1599,13 +1835,8 @@ Go
                         <strong>${referral.userName || 'N/A'}</strong><br>
                         <small style="color: #666;">${referral.userEmail || 'No email'}</small>
                     </td>
-                    <td>
-                        <strong>${referral.referrerName || 'Unknown'}</strong>
-                    </td>
-                    <td>
-                        ${referral.referrerEmail || 'Unknown'}
-                    </td>
-                    <td><code>${referral.referredBy || 'N/A'}</code></td>
+                    <td>${referral.referredBy || 'N/A'}</td>
+                    <td><code>${referral.referralCode || 'N/A'}</code></td>
                     <td><small>${date}</small></td>
                     <td>
                         <span class="status-badge status-pending">
@@ -1650,7 +1881,6 @@ Go
                     const userData = userDoc.data();
                     
                     if (userData.referredBy) {
-                        // Find referrer by their referral code
                         const referrerSnapshot = await db.collection('users')
                             .where('referralCode', '==', userData.referredBy)
                             .get();
@@ -1882,9 +2112,44 @@ Go
                                 ${withdrawal.status === 'rejected' ? 'disabled' : ''} title="Reject">
                             <i class="fas fa-times"></i>
                         </button>
+                        <button class="action-btn edit-btn" onclick="createTransactionForWithdrawal('${withdrawal.id}')" title="Create Message">
+                            <i class="fas fa-comment"></i>
+                        </button>
                     </td>
                 `;
             });
+        }
+        
+        // Function to create transaction for a specific withdrawal
+        function createTransactionForWithdrawal(withdrawalId) {
+            const withdrawal = allWithdrawals.find(w => w.id === withdrawalId);
+            if (!withdrawal) return;
+            
+            const user = allUsers.find(u => u.id === withdrawal.userId);
+            if (!user) return;
+            
+            // Populate user dropdown
+            const userSelect = document.getElementById('transaction-user');
+            userSelect.innerHTML = '<option value="">Select a user...</option>';
+            
+            allUsers.forEach(u => {
+                const option = document.createElement('option');
+                option.value = u.id;
+                option.textContent = `${u.name} (${u.email}) - Balance: $${(u.balance || 0).toFixed(2)}`;
+                option.selected = u.id === user.id;
+                userSelect.appendChild(option);
+            });
+            
+            // Pre-fill form with withdrawal details
+            document.getElementById('transaction-type').value = 'withdrawal';
+            document.getElementById('transaction-amount').value = withdrawal.amount;
+            document.getElementById('transaction-description').value = `Withdrawal processed: ${withdrawal.method || ''}. ${withdrawal.wallet ? `Wallet: ${withdrawal.wallet}` : ''}`;
+            document.getElementById('transaction-status').value = withdrawal.status === 'completed' ? 'completed' : 'pending';
+            
+            // Update user info
+            updateUserInfo();
+            
+            showModal('create-transaction-modal');
         }
         
         async function approveWithdrawal(transactionId) {
@@ -2191,8 +2456,6 @@ Go
             const filteredReferrals = allReferrals.filter(referral => 
                 (referral.userName && referral.userName.toLowerCase().includes(term)) ||
                 (referral.userEmail && referral.userEmail.toLowerCase().includes(term)) ||
-                (referral.referrerName && referral.referrerName.toLowerCase().includes(term)) ||
-                (referral.referrerEmail && referral.referrerEmail.toLowerCase().includes(term)) ||
                 (referral.referredBy && referral.referredBy.toLowerCase().includes(term)) ||
                 (referral.referralCode && referral.referralCode.toLowerCase().includes(term))
             );
@@ -2202,7 +2465,7 @@ Go
             if (filteredReferrals.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" style="text-align: center; color: #ccc;">
+                        <td colspan="6" style="text-align: center; color: #ccc;">
                             <div class="no-data">
                                 <i class="fas fa-search"></i><br>
                                 No referrals found matching "${term}"
@@ -2222,13 +2485,8 @@ Go
                         <strong>${referral.userName || 'N/A'}</strong><br>
                         <small style="color: #666;">${referral.userEmail || 'No email'}</small>
                     </td>
-                    <td>
-                        <strong>${referral.referrerName || 'Unknown'}</strong>
-                    </td>
-                    <td>
-                        ${referral.referrerEmail || 'Unknown'}
-                    </td>
-                    <td><code>${referral.referredBy || 'N/A'}</code></td>
+                    <td>${referral.referredBy || 'N/A'}</td>
+                    <td><code>${referral.referralCode || 'N/A'}</code></td>
                     <td><small>${date}</small></td>
                     <td>
                         <span class="status-badge status-pending">
@@ -2288,4 +2546,5 @@ Go
         }
     </script>
 </body>
-    </html>
+</html>
+
