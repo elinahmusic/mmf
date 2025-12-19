@@ -674,13 +674,14 @@ Go
                                     <th>Email</th>
                                     <th>Balance</th>
                                     <th>Status</th>
+                                    <th>Referral Code</th>
                                     <th>Joined</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="users-tbody">
                                 <tr>
-                                    <td colspan="6" style="text-align: center;">
+                                    <td colspan="7" style="text-align: center;">
                                         <div class="loader"></div>
                                     </td>
                                 </tr>
@@ -1350,7 +1351,7 @@ Go
         async function loadUsers() {
             try {
                 const tbody = document.getElementById('users-tbody');
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;"><div class="loader"></div></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;"><div class="loader"></div></td></tr>';
                 
                 const snapshot = await db.collection('users').orderBy('createdAt', 'desc').get();
                 allUsers = [];
@@ -1369,7 +1370,7 @@ Go
                 const tbody = document.getElementById('users-tbody');
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="6" style="text-align: center; color: #ccc;">
+                        <td colspan="7" style="text-align: center; color: #ccc;">
                             <div class="empty-state">
                                 <i class="fas fa-users-slash"></i><br>
                                 No users found
@@ -1387,7 +1388,7 @@ Go
             if (allUsers.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="6" style="text-align: center; color: #ccc;">
+                        <td colspan="7" style="text-align: center; color: #ccc;">
                             <div class="empty-state">
                                 <i class="fas fa-users-slash"></i><br>
                                 No users found
@@ -1417,6 +1418,11 @@ Go
                         <span class="status-badge ${user.isActive ? 'status-active' : 'status-inactive'}">
                             ${user.isActive ? 'Active' : 'Inactive'}
                         </span>
+                    </td>
+                    <td>
+                        <code style="color: #6ab8ff; background: rgba(106, 184, 255, 0.1); padding: 3px 6px; border-radius: 3px;">
+                            ${user.referralCode || 'N/A'}
+                        </code>
                     </td>
                     <td>${joinDate}</td>
                     <td>
@@ -2400,7 +2406,7 @@ Go
             if (filteredUsers.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="6" style="text-align: center; color: #ccc;">
+                        <td colspan="7" style="text-align: center; color: #ccc;">
                             <div class="no-data">
                                 <i class="fas fa-search"></i><br>
                                 No users found matching "${term}"
@@ -2428,6 +2434,11 @@ Go
                         <span class="status-badge ${user.isActive ? 'status-active' : 'status-inactive'}">
                             ${user.isActive ? 'Active' : 'Inactive'}
                         </span>
+                    </td>
+                    <td>
+                        <code style="color: #6ab8ff; background: rgba(106, 184, 255, 0.1); padding: 3px 6px; border-radius: 3px;">
+                            ${user.referralCode || 'N/A'}
+                        </code>
                     </td>
                     <td>${joinDate}</td>
                     <td>
@@ -2547,4 +2558,3 @@ Go
     </script>
 </body>
 </html>
-
